@@ -1,14 +1,14 @@
 //
-//  senseMEEApp.swift
+//  senseMEE.swift
 //  senseMEE
 //
-//  Created by Matthew Jeung on 4/26/24.
+//  Created by Matthew Jeung on 5/12/24.
 //
 
 import SwiftUI
 
 @main
-struct senseMEEApp: App {
+struct senseMEE: App {
     var body: some Scene {
         WindowGroup {
             ContentView()

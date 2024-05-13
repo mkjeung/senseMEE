@@ -7,13 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		EBAB3EEC2BDC4C1900C3EA57 /* senseMEEApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBAB3EEB2BDC4C1900C3EA57 /* senseMEEApp.swift */; };
 		EBAB3EEE2BDC4C1900C3EA57 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBAB3EED2BDC4C1900C3EA57 /* ContentView.swift */; };
 		EBAB3EF02BDC4C1A00C3EA57 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EBAB3EEF2BDC4C1A00C3EA57 /* Assets.xcassets */; };
 		EBAB3EF32BDC4C1A00C3EA57 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EBAB3EF22BDC4C1A00C3EA57 /* Preview Assets.xcassets */; };
 		EBAB3EFD2BDC4C1A00C3EA57 /* senseMEETests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBAB3EFC2BDC4C1A00C3EA57 /* senseMEETests.swift */; };
 		EBAB3F072BDC4C1A00C3EA57 /* senseMEEUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBAB3F062BDC4C1A00C3EA57 /* senseMEEUITests.swift */; };
 		EBAB3F092BDC4C1A00C3EA57 /* senseMEEUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBAB3F082BDC4C1A00C3EA57 /* senseMEEUITestsLaunchTests.swift */; };
+		EBD78C252BEC1735004618DF /* SensorDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBD78C242BEC1735004618DF /* SensorDataManager.swift */; };
+		EBD78C2B2BF19697004618DF /* senseMEE.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBD78C2A2BF19697004618DF /* senseMEE.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -35,7 +36,6 @@
 
 /* Begin PBXFileReference section */
 		EBAB3EE82BDC4C1900C3EA57 /* senseMEE.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = senseMEE.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		EBAB3EEB2BDC4C1900C3EA57 /* senseMEEApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = senseMEEApp.swift; sourceTree = "<group>"; };
 		EBAB3EED2BDC4C1900C3EA57 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		EBAB3EEF2BDC4C1A00C3EA57 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		EBAB3EF22BDC4C1A00C3EA57 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
@@ -44,6 +44,8 @@
 		EBAB3F022BDC4C1A00C3EA57 /* senseMEEUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = senseMEEUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		EBAB3F062BDC4C1A00C3EA57 /* senseMEEUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = senseMEEUITests.swift; sourceTree = "<group>"; };
 		EBAB3F082BDC4C1A00C3EA57 /* senseMEEUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = senseMEEUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		EBD78C242BEC1735004618DF /* SensorDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorDataManager.swift; sourceTree = "<group>"; };
+		EBD78C2A2BF19697004618DF /* senseMEE.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = senseMEE.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,7 +96,8 @@
 		EBAB3EEA2BDC4C1900C3EA57 /* senseMEE */ = {
 			isa = PBXGroup;
 			children = (
-				EBAB3EEB2BDC4C1900C3EA57 /* senseMEEApp.swift */,
+				EBD78C2A2BF19697004618DF /* senseMEE.swift */,
+				EBD78C242BEC1735004618DF /* SensorDataManager.swift */,
 				EBAB3EED2BDC4C1900C3EA57 /* ContentView.swift */,
 				EBAB3EEF2BDC4C1A00C3EA57 /* Assets.xcassets */,
 				EBAB3EF12BDC4C1A00C3EA57 /* Preview Content */,
@@ -257,8 +260,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EBD78C2B2BF19697004618DF /* senseMEE.swift in Sources */,
 				EBAB3EEE2BDC4C1900C3EA57 /* ContentView.swift in Sources */,
-				EBAB3EEC2BDC4C1900C3EA57 /* senseMEEApp.swift in Sources */,
+				EBD78C252BEC1735004618DF /* SensorDataManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -422,6 +426,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"senseMEE/Preview Content\"";
+				DEVELOPMENT_TEAM = Z9F55LHFZM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -450,6 +455,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"senseMEE/Preview Content\"";
+				DEVELOPMENT_TEAM = Z9F55LHFZM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
