@@ -12,14 +12,6 @@ struct ContentView: View {
             .background(Color.green)
             .foregroundColor(.white)
             .cornerRadius(10)
-
-            Button("Stop Collecting Data") {
-                sensorDataManager.stopCollectingData()
-            }
-            .padding()
-            .background(Color.red)
-            .foregroundColor(.white)
-            .cornerRadius(10)
         }
         .padding()
     }

@@ -3,47 +3,60 @@ import Foundation
 
 class SensorDataManager: ObservableObject {
     private var motionManager: CMMotionManager
-    private var timer: Timer?
+    private var collectionTimer: Timer?
     @Published var sensorData: [String] = []
+    private var startTime: Date?
 
     init() {
         motionManager = CMMotionManager()
-        motionManager.accelerometerUpdateInterval = 0.01
-        motionManager.gyroUpdateInterval = 0.01
+        motionManager.deviceMotionUpdateInterval = 1.0 / 60.0
     }
 
     func startCollectingData() {
-        if motionManager.isAccelerometerAvailable && motionManager.isGyroAvailable {
-            motionManager.startAccelerometerUpdates()
-            motionManager.startGyroUpdates()
-            timer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { _ in
-                self.fetchData()
+        sensorData.removeAll()
+        startTime = Date()
+
+        if motionManager.isDeviceMotionAvailable {
+            motionManager.startDeviceMotionUpdates(to: .main) { [weak self] (motion, error) in
+                guard let motion = motion, error == nil else {
+                    print("Error receiving motion data: \(error!)")
+                    return
+                }
+
+                let accel = motion.userAcceleration
+                let gyro = motion.rotationRate
+
+                let dataString = "\(Date()),\(accel.x),\(accel.y),\(accel.z),\(gyro.x),\(gyro.y),\(gyro.z)"
+                self?.sensorData.append(dataString)
             }
         }
-    }
 
-    private func fetchData() {
-        if let accelData = motionManager.accelerometerData, let gyroData = motionManager.gyroData {
-            let timestamp = Date().timeIntervalSince1970
-            let dataString = "\(timestamp),\(accelData.acceleration.x),\(accelData.acceleration.y),\(accelData.acceleration.z),\(gyroData.rotationRate.x),\(gyroData.rotationRate.y),\(gyroData.rotationRate.z)"
-            DispatchQueue.main.async {
-                self.sensorData.append(dataString)
-            }
+        // Start timer to stop collecting data after 10 seconds
+        collectionTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: false) { [weak self] _ in
+            self?.stopCollectingData()
         }
     }
 
     func stopCollectingData() {
-        motionManager.stopAccelerometerUpdates()
-        motionManager.stopGyroUpdates()
-        timer?.invalidate()
-        timer = nil
+        motionManager.stopDeviceMotionUpdates()
+        collectionTimer?.invalidate()
+        collectionTimer = nil
         exportDataToCSV()
     }
 
     private func exportDataToCSV() {
-        let fileName = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("sensorData.csv")
+        guard let startTime = startTime else {
+            print("Error: Start time is not set")
+            return
+        }
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyyMMddHHmmss"
+        let formattedStartTime = dateFormatter.string(from: startTime)
+        let fileName = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("sensorData_\(formattedStartTime).csv")
         let csvText = "Timestamp,AccelX,AccelY,AccelZ,GyroX,GyroY,GyroZ\n" + sensorData.joined(separator: "\n")
-        
+
         do {
             try csvText.write(to: fileName, atomically: true, encoding: .utf8)
             print("Data successfully saved to \(fileName)")
