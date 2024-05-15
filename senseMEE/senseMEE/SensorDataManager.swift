@@ -76,7 +76,7 @@ class SensorDataManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSam
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.first else { return }
-        fetchWeatherData(for: location)
+        fetchWeatherData(for: "Chicago")
         locationManager.stopUpdatingLocation()
     }
 
@@ -111,8 +111,8 @@ class SensorDataManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSam
         locationManager.startUpdatingLocation()
     }
 
-    private func fetchWeatherData(for location: CLLocation) {
-        let apiUrl = "http://api.weatherapi.com/v1/current.json?key=\(apiKey)&q=\(location.coordinate.latitude),\(location.coordinate.longitude)"
+    private func fetchWeatherData(for city: String) {
+        let apiUrl = "http://api.weatherapi.com/v1/current.json?key=\(apiKey)&q=\(city)"
         
         guard let url = URL(string: apiUrl) else {
             print("Invalid URL")
