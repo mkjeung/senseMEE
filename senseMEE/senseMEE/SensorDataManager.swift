@@ -2,7 +2,6 @@ import CoreMotion
 import Foundation
 import AVFoundation
 import UIKit
-import WeatherKit
 import CoreLocation
 
 class SensorDataManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleBufferDelegate, CLLocationManagerDelegate {
@@ -14,7 +13,7 @@ class SensorDataManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSam
     private var startTime: Date?
     private var currentLightLevel: Float = 0.0
     private var weatherDescription: String = "Unknown"
-    private let weatherService = WeatherService()
+    private let apiKey = "4020668aec0e4380ab9162124241505" // Your WeatherAPI.com API key
     private let locationManager = CLLocationManager()
 
     override init() {
@@ -113,16 +112,40 @@ class SensorDataManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSam
     }
 
     private func fetchWeatherData(for location: CLLocation) {
-        Task {
-            do {
-                let weather = try await weatherService.weather(for: location)
-                self.weatherDescription = weather.currentWeather.condition.description
+        let apiUrl = "http://api.weatherapi.com/v1/current.json?key=\(apiKey)&q=\(location.coordinate.latitude),\(location.coordinate.longitude)"
+        
+        guard let url = URL(string: apiUrl) else {
+            print("Invalid URL")
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { [weak self] (data, response, error) in
+            guard let self = self else { return }
+            
+            if let error = error {
+                print("Error fetching weather data: \(error)")
                 self.startSensors()
+                return
+            }
+            
+            guard let data = data else {
+                print("No data received")
+                self.startSensors()
+                return
+            }
+            
+            do {
+                if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                    if let current = json["current"] as? [String: Any], let condition = current["condition"] as? [String: Any], let text = condition["text"] as? String {
+                        self.weatherDescription = text
+                        self.startSensors()
+                    }
+                }
             } catch {
-                print("Failed to fetch weather data: \(error)")
+                print("Error decoding JSON: \(error)")
                 self.startSensors()
             }
-        }
+        }.resume()
     }
 
     private func startSensors() {
