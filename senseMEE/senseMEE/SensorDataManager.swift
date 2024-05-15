@@ -13,8 +13,9 @@ class SensorDataManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSam
     private var startTime: Date?
     private var currentLightLevel: Float = 0.0
     private var weatherDescription: String = "Unknown"
-    private let apiKey = "4020668aec0e4380ab9162124241505" // Your WeatherAPI.com API key
     private let locationManager = CLLocationManager()
+    private let weatherAPIKey = "f1a1cc54b829d4c066beafe570a227c2"
+    @Published var isCollectingData = false
 
     override init() {
         motionManager = CMMotionManager()
@@ -71,12 +72,12 @@ class SensorDataManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSam
     private func setupLocationManager() {
         locationManager.delegate = self
         locationManager.requestWhenInUseAuthorization()
-        locationManager.startUpdatingLocation()
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.first else { return }
-        fetchWeatherData(for: "Chicago")
+        print("Location updated: \(location)")
+        fetchWeatherData(for: location)
         locationManager.stopUpdatingLocation()
     }
 
@@ -106,22 +107,24 @@ class SensorDataManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSam
     }
 
     func startCollectingData() {
+        guard !isCollectingData else { return }
+        isCollectingData = true
         sensorData.removeAll()
         startTime = Date()
+        print("Starting data collection...")
         locationManager.startUpdatingLocation()
     }
 
-    private func fetchWeatherData(for city: String) {
-        let apiUrl = "http://api.weatherapi.com/v1/current.json?key=\(apiKey)&q=\(city)"
-        
-        guard let url = URL(string: apiUrl) else {
+    private func fetchWeatherData(for location: CLLocation) {
+        let urlString = "https://api.openweathermap.org/data/2.5/weather?lat=\(location.coordinate.latitude)&lon=\(location.coordinate.longitude)&appid=\(weatherAPIKey)"
+        guard let url = URL(string: urlString) else {
             print("Invalid URL")
+            startSensors()
             return
         }
         
-        URLSession.shared.dataTask(with: url) { [weak self] (data, response, error) in
+        let task = URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
             guard let self = self else { return }
-            
             if let error = error {
                 print("Error fetching weather data: \(error)")
                 self.startSensors()
@@ -135,21 +138,28 @@ class SensorDataManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSam
             }
             
             do {
-                if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
-                    if let current = json["current"] as? [String: Any], let condition = current["condition"] as? [String: Any], let text = condition["text"] as? String {
-                        self.weatherDescription = text
-                        self.startSensors()
-                    }
+                if let weatherResponse = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+                   let weatherArray = weatherResponse["weather"] as? [[String: Any]],
+                   let weather = weatherArray.first,
+                   let description = weather["main"] as? String {
+                    self.weatherDescription = description
+                    print("Weather description: \(description)")
+                } else {
+                    print("Failed to parse weather data")
                 }
             } catch {
-                print("Error decoding JSON: \(error)")
-                self.startSensors()
+                print("Failed to decode weather data: \(error)")
             }
-        }.resume()
+            
+        }
+        
+        task.resume()
+        self.startSensors()
     }
 
     private func startSensors() {
         audioRecorder?.record()
+        print("Starting sensors...")
 
         if motionManager.isDeviceMotionAvailable {
             motionManager.startDeviceMotionUpdates(to: .main) { [weak self] (motion, error) in
@@ -166,6 +176,7 @@ class SensorDataManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSam
                 
                 let dataString = "\(Date()),\(accel.x),\(accel.y),\(accel.z),\(gyro.x),\(gyro.y),\(gyro.z),\(audioLevel),\(self.currentLightLevel),\(self.weatherDescription)"
                 self.sensorData.append(dataString)
+                print("Data collected: \(dataString)")
             }
         }
 
@@ -173,9 +184,11 @@ class SensorDataManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSam
         collectionTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: false) { [weak self] _ in
             self?.stopCollectingData()
         }
+        print("Timer started for 10 seconds")
     }
 
-    func stopCollectingData() {
+    @objc func stopCollectingData() {
+        isCollectingData = false
         motionManager.stopDeviceMotionUpdates()
         audioRecorder?.stop()
         collectionTimer?.invalidate()
