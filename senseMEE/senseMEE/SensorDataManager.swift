@@ -4,17 +4,15 @@ import AVFoundation
 import UIKit
 import CoreLocation
 
-class SensorDataManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleBufferDelegate, CLLocationManagerDelegate {
+class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private var motionManager: CMMotionManager
     private var audioRecorder: AVAudioRecorder?
-    private var captureSession: AVCaptureSession?
     private var collectionTimer: Timer?
     private var countdownTimer: Timer?
     @Published var sensorData: [String] = []
     @Published var remainingTime: Int = 5
     @Published var isCollectingData = false
     private var startTime: Date?
-    private var currentLightLevel: Float = 0.0
     private var weatherDescription: String = "Unknown"
     private let locationManager = CLLocationManager()
     private let weatherAPIKey = "f1a1cc54b829d4c066beafe570a227c2"
@@ -24,7 +22,6 @@ class SensorDataManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSam
         motionManager.deviceMotionUpdateInterval = 1.0 / 60.0
         super.init()
         setupAudioRecorder()
-        setupLightSensor()
         setupLocationManager()
     }
 
@@ -49,28 +46,6 @@ class SensorDataManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSam
         }
     }
 
-    private func setupLightSensor() {
-        captureSession = AVCaptureSession()
-        guard let captureSession = captureSession else { return }
-        
-        captureSession.beginConfiguration()
-        
-        guard let videoDevice = AVCaptureDevice.default(for: .video) else { return }
-        guard let videoDeviceInput = try? AVCaptureDeviceInput(device: videoDevice) else { return }
-        if captureSession.canAddInput(videoDeviceInput) {
-            captureSession.addInput(videoDeviceInput)
-        }
-        
-        let videoOutput = AVCaptureVideoDataOutput()
-        videoOutput.setSampleBufferDelegate(self, queue: DispatchQueue(label: "videoQueue"))
-        if captureSession.canAddOutput(videoOutput) {
-            captureSession.addOutput(videoOutput)
-        }
-        
-        captureSession.commitConfiguration()
-        captureSession.startRunning()
-    }
-
     private func setupLocationManager() {
         locationManager.delegate = self
         locationManager.requestWhenInUseAuthorization()
@@ -81,31 +56,6 @@ class SensorDataManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSam
         print("Location updated: \(location)")
         fetchWeatherData(for: location)
         locationManager.stopUpdatingLocation()
-    }
-
-    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
-        CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
-        
-        let width = CVPixelBufferGetWidth(pixelBuffer)
-        let height = CVPixelBufferGetHeight(pixelBuffer)
-        let count = width * height
-        
-        var luminanceTotal: Float = 0
-        if let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer) {
-            let buffer = baseAddress.assumingMemoryBound(to: UInt8.self)
-            for y in 0..<height {
-                for x in 0..<width {
-                    let pixel = buffer[y * width + x]
-                    luminanceTotal += Float(pixel)
-                }
-            }
-        }
-        
-        CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly)
-        
-        let averageLuminance = luminanceTotal / Float(count)
-        currentLightLevel = averageLuminance
     }
 
     func startCollectingData() {
@@ -189,13 +139,13 @@ class SensorDataManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSam
                 dateFormatter.dateFormat = "HHmmss.SSS"
                 let timestamp = dateFormatter.string(from: Date())
 
-                let dataString = "\(timestamp),\(accel.x),\(accel.y),\(accel.z),\(gyro.x),\(gyro.y),\(gyro.z),\(audioLevel),\(self.currentLightLevel),\(self.weatherDescription)"
+                let dataString = "\(timestamp),\(accel.x),\(accel.y),\(accel.z),\(gyro.x),\(gyro.y),\(gyro.z),\(audioLevel),\(self.weatherDescription)"
                 self.sensorData.append(dataString)
                 print("Data collected: \(dataString)")
             }
         }
 
-        // Start timer to stop collecting data after 10 seconds
+        // Start timer to stop collecting data after 5 seconds
         collectionTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
             self?.stopCollectingData()
         }
@@ -211,7 +161,6 @@ class SensorDataManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSam
         collectionTimer = nil
         countdownTimer?.invalidate()
         countdownTimer = nil
-        captureSession?.stopRunning()
         exportDataToCSV()
     }
 
@@ -226,7 +175,7 @@ class SensorDataManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSam
         let formattedStartTime = dateFormatter.string(from: startTime)
         let fileName = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("sensorData_\(formattedStartTime).csv")
-        let csvText = "Timestamp,AccelX,AccelY,AccelZ,GyroX,GyroY,GyroZ,AudioLevel,LightLevel,Weather\n" + sensorData.joined(separator: "\n")
+        let csvText = "Timestamp,AccelX,AccelY,AccelZ,GyroX,GyroY,GyroZ,AudioLevel,Weather\n" + sensorData.joined(separator: "\n")
 
         do {
             try csvText.write(to: fileName, atomically: true, encoding: .utf8)
