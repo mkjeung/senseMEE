@@ -1,19 +1,40 @@
 import SwiftUI
 
 struct ContentView: View {
-    @ObservedObject var sensorDataManager = SensorDataManager()
+    @StateObject private var sensorDataManager = SensorDataManager()
 
     var body: some View {
-        VStack(spacing: 20) {
-            Button("Start Collecting Data") {
+        VStack {
+            Text("Time remaining: \(sensorDataManager.remainingTime) seconds")
+                .font(.title)
+                .padding()
+
+            Button(action: {
                 sensorDataManager.startCollectingData()
+            }) {
+                Text("Start Collecting Data")
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
             }
             .padding()
-            .background(Color.green)
-            .foregroundColor(.white)
-            .cornerRadius(10)
+            
+            if sensorDataManager.isCollectingData {
+                Text("Collecting data...")
+                    .foregroundColor(.red)
+            } else {
+                Text("Data collection stopped")
+                    .foregroundColor(.green)
+            }
         }
         .padding()
+    }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
     }
 }
 

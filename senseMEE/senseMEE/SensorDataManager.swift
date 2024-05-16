@@ -9,13 +9,15 @@ class SensorDataManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSam
     private var audioRecorder: AVAudioRecorder?
     private var captureSession: AVCaptureSession?
     private var collectionTimer: Timer?
+    private var countdownTimer: Timer?
     @Published var sensorData: [String] = []
+    @Published var remainingTime: Int = 5
+    @Published var isCollectingData = false
     private var startTime: Date?
     private var currentLightLevel: Float = 0.0
     private var weatherDescription: String = "Unknown"
     private let locationManager = CLLocationManager()
     private let weatherAPIKey = "f1a1cc54b829d4c066beafe570a227c2"
-    @Published var isCollectingData = false
 
     override init() {
         motionManager = CMMotionManager()
@@ -111,8 +113,17 @@ class SensorDataManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSam
         isCollectingData = true
         sensorData.removeAll()
         startTime = Date()
+        remainingTime = 5
         print("Starting data collection...")
         locationManager.startUpdatingLocation()
+        
+        countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
+            guard let self = self else { return }
+            self.remainingTime -= 1
+            if self.remainingTime <= 0 {
+                timer.invalidate()
+            }
+        }
     }
 
     private func fetchWeatherData(for location: CLLocation) {
@@ -174,25 +185,32 @@ class SensorDataManager: NSObject, ObservableObject, AVCaptureVideoDataOutputSam
                 self.audioRecorder?.updateMeters()
                 let audioLevel = pow(10, (self.audioRecorder?.averagePower(forChannel: 0) ?? -160.0) / 20)
                 
-                let dataString = "\(Date()),\(accel.x),\(accel.y),\(accel.z),\(gyro.x),\(gyro.y),\(gyro.z),\(audioLevel),\(self.currentLightLevel),\(self.weatherDescription)"
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateFormat = "HHmmss.SSS"
+                let timestamp = dateFormatter.string(from: Date())
+
+                let dataString = "\(timestamp),\(accel.x),\(accel.y),\(accel.z),\(gyro.x),\(gyro.y),\(gyro.z),\(audioLevel),\(self.currentLightLevel),\(self.weatherDescription)"
                 self.sensorData.append(dataString)
                 print("Data collected: \(dataString)")
             }
         }
 
         // Start timer to stop collecting data after 10 seconds
-        collectionTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: false) { [weak self] _ in
+        collectionTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
             self?.stopCollectingData()
         }
-        print("Timer started for 10 seconds")
+        print("Timer started for 5 seconds")
     }
 
     @objc func stopCollectingData() {
+        print("Stopping data collection...")
         isCollectingData = false
         motionManager.stopDeviceMotionUpdates()
         audioRecorder?.stop()
         collectionTimer?.invalidate()
         collectionTimer = nil
+        countdownTimer?.invalidate()
+        countdownTimer = nil
         captureSession?.stopRunning()
         exportDataToCSV()
     }
