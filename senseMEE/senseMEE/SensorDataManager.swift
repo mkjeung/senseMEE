@@ -4,7 +4,7 @@ import AVFoundation
 import UIKit
 import CoreLocation
 import CoreML
-import Combine 
+import Combine
 
 class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private var motionManager: CMMotionManager
@@ -22,6 +22,7 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     // Properties for sliding window data
     private var accelData: [(x: Double, y: Double, z: Double, timestamp: Date)] = []
     private var gyroData: [(x: Double, y: Double, z: Double, timestamp: Date)] = []
+    private var micData: [(level: Double, timestamp: Date)] = []
     private let windowSize: TimeInterval = 5.0
     private var coreMLModel: playlists!
     
@@ -52,6 +53,7 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             let url = URL(fileURLWithPath: "/dev/null")
             audioRecorder = try? AVAudioRecorder(url: url, settings: settings)
             audioRecorder?.isMeteringEnabled = true
+            audioRecorder?.prepareToRecord()
         } catch {
             print("Failed to set up audio recorder: \(error)")
         }
@@ -144,12 +146,19 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         let accel = motion.userAcceleration
         let gyro = motion.rotationRate
         let timestamp = Date()
-        
+
         accelData.append((x: accel.x, y: accel.y, z: accel.z, timestamp: timestamp))
         gyroData.append((x: gyro.x, y: gyro.y, z: gyro.z, timestamp: timestamp))
 
         accelData = accelData.filter { $0.timestamp > Date().addingTimeInterval(-windowSize) }
         gyroData = gyroData.filter { $0.timestamp > Date().addingTimeInterval(-windowSize) }
+
+        // Collect microphone level
+        audioRecorder?.updateMeters()
+        let micLevel = Double(pow(10, (audioRecorder?.peakPower(forChannel: 0) ?? -160.0) / 20))
+        print("Microphone level: \(micLevel)")
+        micData.append((level: micLevel, timestamp: timestamp))
+        micData = micData.filter { $0.timestamp > Date().addingTimeInterval(-windowSize) }
 
         // Check if we have enough data to classify
         if let start = accelData.first?.timestamp, Date().timeIntervalSince(start) >= windowSize {
@@ -159,7 +168,7 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             print("Not enough data collected yet")
         }
     }
-
+    
 
     private func classifyData() {
         let accelMeanX = accelData.map { $0.x }.mean
@@ -175,6 +184,8 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         let gyroVarX = gyroData.map { $0.x }.variance
         let gyroVarY = gyroData.map { $0.y }.variance
         let gyroVarZ = gyroData.map { $0.z }.variance
+        
+        let micMean = micData.map { $0.level }.mean
 
         let modelInput = playlistsInput(
             mean_AccelX: accelMeanX,
@@ -193,8 +204,12 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         do {
             let prediction = try coreMLModel.prediction(input: modelInput)
             DispatchQueue.main.async { // Ensure UI updates are on the main thread
-                self.predictedActivity = prediction.classLabel
-                print("Predicted activity: \(prediction.classLabel)")
+                if prediction.classLabel == "stationary" && micMean < 0.01 { // Adjust the threshold as needed
+                    self.predictedActivity = "Sleep"
+                } else {
+                    self.predictedActivity = "Awake"
+                }
+                print("Predicted activity: \(self.predictedActivity)")
             }
         } catch {
             print("Failed to make a prediction: \(error)")
@@ -212,7 +227,6 @@ extension Array where Element == Double {
         return isEmpty ? 0.0 : reduce(0.0) { $0 + ($1 - meanValue) * ($1 - meanValue) } / Double(count)
     }
 }
-
 
 
 
