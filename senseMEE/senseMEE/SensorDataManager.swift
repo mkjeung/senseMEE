@@ -87,13 +87,13 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             self?.collectData()
         }
         
-        spotifyTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
-            if let playlistId = self?.curPlaylistId {
-                if let tok = self?.accessToken {
-                    self?.handleSpotify(accessToken: tok, playlistId: playlistId)
-                }
-            }
-        }
+//        spotifyTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
+//            if let playlistId = self?.curPlaylistId {
+//                if let tok = self?.accessToken {
+//                    self?.handleSpotify(accessToken: tok, playlistId: playlistId)
+//                }
+//            }
+//        }
     }
     
     private func fetchWeatherData() {
@@ -346,44 +346,71 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         if let hour = Int(hourString) {
             //print(hour) // This will print the hour as an integer
 
-        let modelInput = playlistsInput(
-            mean_AccelX: accelMeanX,
-            var_AccelX: accelVarX,
-            mean_AccelY: accelMeanY,
-            var_AccelY: accelVarY,
-            mean_AccelZ: accelMeanZ,
-            var_AccelZ: accelVarZ,
-            mean_GyroX: gyroMeanX,
-            var_GyroX: gyroVarX,
-            mean_GyroY: gyroMeanY,
-            var_GyroY: gyroVarY,
-            mean_GyroZ: gyroMeanZ,
-            var_GyroZ: gyroVarZ)
-    
-        do {
-            let prediction = try coreMLModel.prediction(input: modelInput)
-            
-            DispatchQueue.main.async { // Ensure UI updates are on the main thread
-                if prediction.classLabel == "stationary" && micMean < 0.05 && self.weatherDescription == "Clouds" && hour < 20 {
-                    self.predictedActivity = "Sleep"
-                    self.nextPlaylistId = "Change"
-                } else {
-                    self.predictedActivity = "Awake"
-                    self.nextPlaylistId = "Change"
+            let modelInput = playlistsInput(
+                mean_AccelX: accelMeanX,
+                var_AccelX: accelVarX,
+                mean_AccelY: accelMeanY,
+                var_AccelY: accelVarY,
+                mean_AccelZ: accelMeanZ,
+                var_AccelZ: accelVarZ,
+                mean_GyroX: gyroMeanX,
+                var_GyroX: gyroVarX,
+                mean_GyroY: gyroMeanY,
+                var_GyroY: gyroVarY,
+                mean_GyroZ: gyroMeanZ,
+                var_GyroZ: gyroVarZ)
+
+            do {
+                let prediction = try coreMLModel.prediction(input: modelInput)
+                
+                let mode = determineMode(weather: weatherDescription, time: hour, activity: prediction.classLabel, micLevel: micMean)
+                
+                DispatchQueue.main.async { // Ensure UI updates are on the main thread
+                    self.predictedActivity = mode
+                    self.nextPlaylistId = mode
+                    print("Predicted activity: \(self.predictedActivity)")
                 }
+<<<<<<< HEAD
                 //print("Predicted activity: \(self.predictedActivity)")
+=======
+            } catch {
+                print("Failed to make a prediction: \(error)")
+>>>>>>> refs/remotes/origin/main
             }
-        } catch {
-            print("Failed to make a prediction: \(error)")
-        }
         } else {
             print("Failed to convert hour string to integer")
         }
     }
     
-    
+    func determineMode(weather: String, time: Int, activity: String, micLevel: Double) -> String {
+        print("Determining mode with weather: \(weather), time: \(time), activity: \(activity), micLevel: \(micLevel)")
+        
+        if activity == "running" {
+            return "Hype & Energizing"
+            
+        } else if weather == "Rain" {
+            return "Emo Rock Music"
+        } else if activity == "walking" && micLevel > 0.3 {
+            return "Hype & Energizing"
+        } else if activity == "walking" && time >= 19 {
+            return "Emo Rock Music"
+        } else if activity == "walking" && weather == "Clear" && time < 19 {
+            return "Bright Happy Chill"
+        } else if activity == "stationary" && micLevel < 0.05 && time < 19 {
+            return "Calm and Mellow Chill"
+        } else if activity == "walking" && weather == "Clouds" && time < 19 {
+            return "Calm and Mellow Chill"
+        } else if activity == "stationary" && micLevel < 0.05 && time >= 19 {
+            return "Sleep mode"
+        } else {
+            return "Default: Emo Rock Music"
+            
+        }
+        
+    }
 }
 
+// Extensions should be placed outside the class definition
 extension Array where Element == Double {
     var mean: Double {
         return isEmpty ? 0.0 : reduce(0.0, +) / Double(count)
@@ -394,7 +421,6 @@ extension Array where Element == Double {
         return isEmpty ? 0.0 : reduce(0.0) { $0 + ($1 - meanValue) * ($1 - meanValue) } / Double(count)
     }
 }
-
 
 
 //import CoreMotion
