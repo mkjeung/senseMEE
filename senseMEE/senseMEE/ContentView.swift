@@ -16,25 +16,22 @@ struct ContentView: View {
                 .foregroundColor(.blue)
             
             Spacer()
-        }
-        .onAppear {
-            sensorDataManager.startDataCollectionLoop() 
-        }
-        VStack {
-            if let accessToken = spotifyManager.accessToken {
+            
+            if spotifyManager.accessToken != nil {
                 Text("Authenticated")
-                Button("Fetch and Queue Song") {
-                    spotifyManager.fetchAndQueueSong()
-                }
             } else {
                 Button("Authenticate with Spotify") {
                     spotifyManager.authenticate()
                 }
             }
         }
+        .onAppear {
+            sensorDataManager.startDataCollectionLoop()
+        }
         .onOpenURL { url in
             spotifyManager.handleURL(url)
         }
+        .padding()
     }
 }
 
@@ -43,47 +40,4 @@ struct ContentView_Previews: PreviewProvider {
         ContentView()
     }
 }
-
-
-
-
-//import SwiftUI
-//
-//struct ContentView: View {
-//    @StateObject private var sensorDataManager = SensorDataManager()
-//
-//    var body: some View {
-//        VStack {
-//            Text("Time remaining: \(sensorDataManager.remainingTime) seconds")
-//                .font(.title)
-//                .padding()
-//
-//            Button(action: {
-//                sensorDataManager.startCollectingData()
-//            }) {
-//                Text("Start Collecting Data")
-//                    .padding()
-//                    .background(Color.blue)
-//                    .foregroundColor(.white)
-//                    .cornerRadius(10)
-//            }
-//            .padding()
-//            
-//            if sensorDataManager.isCollectingData {
-//                Text("Collecting data...")
-//                    .foregroundColor(.red)
-//            } else {
-//                Text("Data collection stopped")
-//                    .foregroundColor(.green)
-//            }
-//        }
-//        .padding()
-//    }
-//}
-//
-//struct ContentView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        ContentView()
-//    }
-//}
 

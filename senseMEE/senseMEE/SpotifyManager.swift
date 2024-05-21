@@ -2,7 +2,14 @@ import SwiftUI
 import SpotifyiOS
 
 class SpotifyManager: NSObject, ObservableObject, SPTSessionManagerDelegate {
-    @Published var accessToken: String?
+    @Published var accessToken: String? {
+        didSet {
+            if let token = accessToken {
+                // Save the access token to UserDefaults
+                UserDefaults.standard.set(token, forKey: "SpotifyAccessToken")
+            }
+        }
+    }
     
     let SpotifyClientID = "7bf1838791914338a4969de74c01b388"
     let SpotifyRedirectURL = URL(string: "senseMEE://callback")!
