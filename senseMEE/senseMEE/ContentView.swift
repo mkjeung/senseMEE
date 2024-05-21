@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject private var spotifyManager = SpotifyManager()
     @ObservedObject var sensorDataManager = SensorDataManager()
 
     var body: some View {
@@ -18,6 +19,21 @@ struct ContentView: View {
         }
         .onAppear {
             sensorDataManager.startDataCollectionLoop() 
+        }
+        VStack {
+            if let accessToken = spotifyManager.accessToken {
+                Text("Authenticated")
+                Button("Fetch and Queue Song") {
+                    spotifyManager.fetchAndQueueSong()
+                }
+            } else {
+                Button("Authenticate with Spotify") {
+                    spotifyManager.authenticate()
+                }
+            }
+        }
+        .onOpenURL { url in
+            spotifyManager.handleURL(url)
         }
     }
 }
