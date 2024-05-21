@@ -153,7 +153,7 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         accelData = accelData.filter { $0.timestamp > Date().addingTimeInterval(-windowSize) }
         gyroData = gyroData.filter { $0.timestamp > Date().addingTimeInterval(-windowSize) }
 
-        // Collect microphone level
+        audioRecorder?.record()
         audioRecorder?.updateMeters()
         let micLevel = Double(pow(10, (audioRecorder?.peakPower(forChannel: 0) ?? -160.0) / 20))
         print("Microphone level: \(micLevel)")
@@ -274,6 +274,13 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         let gyroVarZ = gyroData.map { $0.z }.variance
         
         let micMean = micData.map { $0.level }.mean
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "HH"
+        let hourString = dateFormatter.string(from: Date())
+
+        if let hour = Int(hourString) {
+            print(hour) // This will print the hour as an integer
 
         let modelInput = playlistsInput(
             mean_AccelX: accelMeanX,
@@ -291,8 +298,9 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     
         do {
             let prediction = try coreMLModel.prediction(input: modelInput)
+            
             DispatchQueue.main.async { // Ensure UI updates are on the main thread
-                if prediction.classLabel == "stationary" && micMean < 0.01 { // Adjust the threshold as needed
+                if prediction.classLabel == "stationary" && micMean < 0.05 && self.weatherDescription == "Clouds" && hour < 20 {
                     self.predictedActivity = "Sleep"
                 } else {
                     self.predictedActivity = "Awake"
@@ -301,6 +309,9 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             }
         } catch {
             print("Failed to make a prediction: \(error)")
+        }
+        } else {
+            print("Failed to convert hour string to integer")
         }
     }
     
