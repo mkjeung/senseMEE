@@ -168,16 +168,17 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         audioRecorder?.record()
         audioRecorder?.updateMeters()
         let micLevel = Double(pow(10, (audioRecorder?.peakPower(forChannel: 0) ?? -160.0) / 20))
-        print("Microphone level: \(micLevel)")
+        //print("Microphone level: \(micLevel)")
+        micData.append((level: micLevel, timestamp: timestamp))
         micData.append((level: micLevel, timestamp: timestamp))
         micData = micData.filter { $0.timestamp > Date().addingTimeInterval(-windowSize) }
 
         // Check if we have enough data to classify
         if let start = accelData.first?.timestamp, Date().timeIntervalSince(start) >= windowSize {
-            print("Enough data collected, attempting to classify...")
+            //print("Enough data collected, attempting to classify...")
             classifyData()
         } else {
-            print("Not enough data collected yet")
+            //print("Not enough data collected yet")
         }
     }
     
@@ -343,7 +344,7 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         let hourString = dateFormatter.string(from: Date())
 
         if let hour = Int(hourString) {
-            print(hour) // This will print the hour as an integer
+            //print(hour) // This will print the hour as an integer
 
         let modelInput = playlistsInput(
             mean_AccelX: accelMeanX,
@@ -370,7 +371,7 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                     self.predictedActivity = "Awake"
                     self.nextPlaylistId = "Change"
                 }
-                print("Predicted activity: \(self.predictedActivity)")
+                //print("Predicted activity: \(self.predictedActivity)")
             }
         } catch {
             print("Failed to make a prediction: \(error)")
