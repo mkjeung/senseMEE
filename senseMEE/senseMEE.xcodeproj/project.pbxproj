@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		140C712A2BFC41A9000C993D /* playlists.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 140C71292BFC41A9000C993D /* playlists.mlmodel */; };
 		EBAB3EEE2BDC4C1900C3EA57 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBAB3EED2BDC4C1900C3EA57 /* ContentView.swift */; };
 		EBAB3EF02BDC4C1A00C3EA57 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EBAB3EEF2BDC4C1A00C3EA57 /* Assets.xcassets */; };
 		EBAB3EF32BDC4C1A00C3EA57 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EBAB3EF22BDC4C1A00C3EA57 /* Preview Assets.xcassets */; };
@@ -35,6 +36,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		140C71292BFC41A9000C993D /* playlists.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = playlists.mlmodel; sourceTree = "<group>"; };
 		EBAB3EE82BDC4C1900C3EA57 /* senseMEE.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = senseMEE.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EBAB3EED2BDC4C1900C3EA57 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		EBAB3EEF2BDC4C1A00C3EA57 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -98,6 +100,7 @@
 			isa = PBXGroup;
 			children = (
 				EBD78C642BF1A859004618DF /* Info.plist */,
+				140C71292BFC41A9000C993D /* playlists.mlmodel */,
 				EBD78C2A2BF19697004618DF /* senseMEE.swift */,
 				EBD78C242BEC1735004618DF /* SensorDataManager.swift */,
 				EBAB3EED2BDC4C1900C3EA57 /* ContentView.swift */,
@@ -264,6 +267,7 @@
 			files = (
 				EBD78C2B2BF19697004618DF /* senseMEE.swift in Sources */,
 				EBAB3EEE2BDC4C1900C3EA57 /* ContentView.swift in Sources */,
+				140C712A2BFC41A9000C993D /* playlists.mlmodel in Sources */,
 				EBD78C252BEC1735004618DF /* SensorDataManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

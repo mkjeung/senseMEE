@@ -169,6 +169,94 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
     }
     
+    // Spotify
+    func fetchPlaylistTracks(accessToken: String, playlistId: String, completion: @escaping ([String]?) -> Void) {
+        var allTrackIds: [String] = []
+        var urlString: String = "https://api.spotify.com/v1/playlists/\(playlistId)/tracks"
+//        var nextURL: String? = "https://api.spotify.com/v1/playlists/\(playlistId)/tracks"
+        guard let url = URL(string: urlString) else {
+            print("Invalid URL")
+            completion(nil)
+            return
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            guard let data = data, error == nil else {
+                print("Error fetching playlist tracks: \(String(describing: error))")
+                completion(nil)
+                return
+            }
+            
+            do {
+                if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+                   let items = json["items"] as? [[String: Any]] {
+                    for item in items {
+                        if let track = item["track"] as? [String: Any],
+                           let trackId = track["id"] as? String {
+                            allTrackIds.append(trackId)
+                        }
+                    }
+                    completion(allTrackIds)
+                } else {
+                    completion(nil)
+                }
+            } catch {
+                print("JSON error: \(error.localizedDescription)")
+                completion(nil)
+            }
+        }
+        task.resume()
+    }
+
+    func chooseRandomTrack(from tracks: [String]) -> String? {
+        guard !tracks.isEmpty else { return nil }
+        let randomIndex = Int.random(in: 0..<tracks.count)
+        return tracks[randomIndex]
+    }
+
+    func getRandomTrackFromPlaylist(accessToken: String, playlistId: String, completion: @escaping (String?) -> Void) {
+        
+            fetchPlaylistTracks(accessToken: accessToken, playlistId: playlistId) { trackIds in
+                guard let trackIds = trackIds else {
+                    print("Failed to fetch track IDs")
+                    completion(nil)
+                    return
+                }
+                
+                let randomTrackId = self.chooseRandomTrack(from: trackIds)
+                completion(randomTrackId)
+            }
+    }
+    
+    func addTrackToPlaybackQueue(accessToken: String, trackId: String, completion: @escaping (Bool) -> Void) {
+        let queueUrl = "https://api.spotify.com/v1/me/player/queue?uri=spotify:track:\(trackId)"
+        
+        guard let url = URL(string: queueUrl) else {
+            completion(false)
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            guard error == nil, let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 204 else {
+                print("Error adding track to playback queue: \(String(describing: error))")
+                completion(false)
+                return
+            }
+            
+            completion(true)
+        }
+        
+        task.resume()
+    }
+
+    
 
     private func classifyData() {
         let accelMeanX = accelData.map { $0.x }.mean
@@ -215,6 +303,8 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             print("Failed to make a prediction: \(error)")
         }
     }
+    
+    
 }
 
 extension Array where Element == Double {
