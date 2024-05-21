@@ -8,7 +8,6 @@ import Combine
 
 class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private var motionManager: CMMotionManager
-    private var audioRecorder: AVAudioRecorder?
     private var collectionTimer: Timer?
     private var spotifyTimer: Timer?
     private var weatherTimer: Timer?
@@ -29,7 +28,6 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     // Properties for sliding window data
     private var accelData: [(x: Double, y: Double, z: Double, timestamp: Date)] = []
     private var gyroData: [(x: Double, y: Double, z: Double, timestamp: Date)] = []
-    private var micData: [(level: Double, timestamp: Date)] = []
     private let windowSize: TimeInterval = 5.0
     private var coreMLModel: playlists!
     
@@ -41,7 +39,6 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         self.motionManager = CMMotionManager()
         motionManager.deviceMotionUpdateInterval = 1.0 / 60.0
         super.init()
-        setupAudioRecorder()
         setupLocationManager()
         startWeatherTimer()
         startDataCollectionLoop()
@@ -49,27 +46,6 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         observeSpotifyDevices()
     }
     
-    private func setupAudioRecorder() {
-        let audioSession = AVAudioSession.sharedInstance()
-        do {
-            try audioSession.setCategory(.record, mode: .default)
-            try audioSession.setActive(true)
-            
-            let settings: [String: Any] = [
-                AVFormatIDKey: kAudioFormatAppleLossless,
-                AVSampleRateKey: 44100.0,
-                AVNumberOfChannelsKey: 1,
-                AVEncoderAudioQualityKey: AVAudioQuality.min.rawValue
-            ]
-            
-            let url = URL(fileURLWithPath: "/dev/null")
-            audioRecorder = try? AVAudioRecorder(url: url, settings: settings)
-            audioRecorder?.isMeteringEnabled = true
-            audioRecorder?.prepareToRecord()
-        } catch {
-            print("Failed to set up audio recorder: \(error)")
-        }
-    }
     
     private func setupLocationManager() {
         locationManager.delegate = self
@@ -172,14 +148,6 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
 
         accelData = accelData.filter { $0.timestamp > Date().addingTimeInterval(-windowSize) }
         gyroData = gyroData.filter { $0.timestamp > Date().addingTimeInterval(-windowSize) }
-
-        audioRecorder?.record()
-        audioRecorder?.updateMeters()
-        let micLevel = Double(pow(10, (audioRecorder?.peakPower(forChannel: 0) ?? -160.0) / 20))
-        //print("Microphone level: \(micLevel)")
-        micData.append((level: micLevel, timestamp: timestamp))
-        micData.append((level: micLevel, timestamp: timestamp))
-        micData = micData.filter { $0.timestamp > Date().addingTimeInterval(-windowSize) }
 
         // Check if we have enough data to classify
         if let start = accelData.first?.timestamp, Date().timeIntervalSince(start) >= windowSize {
@@ -414,7 +382,6 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         let gyroVarY = gyroData.map { $0.y }.variance
         let gyroVarZ = gyroData.map { $0.z }.variance
         
-        let micMean = micData.map { $0.level }.mean
         
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "HH"
@@ -440,7 +407,7 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             do {
                 let prediction = try coreMLModel.prediction(input: modelInput)
                 
-                let mode = determineMode(weather: weatherDescription, time: hour, activity: prediction.classLabel, micLevel: micMean)
+                let mode = determineMode(weather: weatherDescription, time: hour, activity: prediction.classLabel)
                 
                 DispatchQueue.main.async { // Ensure UI updates are on the main thread
                     self.predictedActivity = mode
@@ -473,24 +440,22 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
     }
     
-    func determineMode(weather: String, time: Int, activity: String, micLevel: Double) -> String {
+    func determineMode(weather: String, time: Int, activity: String) -> String {
         //print("Determining mode with weather: \(weather), time: \(time), activity: \(activity), micLevel: \(micLevel)")
         
         if activity == "running" {
             return "Hype & Energizing"
         } else if weather == "Rain" || weather == "Drizzle" || weather == "Thunderstorm"{
             return "Emo Rock Music"
-        } else if micLevel > 0.3 {
-            return "Hype & Energizing"
         } else if activity == "walking" && time >= 19 {
             return "Emo Rock Music"
         } else if activity == "walking" && weather == "Clear" && time < 19 {
             return "Bright Happy Chill"
-        } else if activity == "stationary" && micLevel < 0.15 && time < 19 {
+        } else if activity == "stationary" && time < 19 {
             return "Calm and Mellow Chill"
         } else if activity == "walking" && weather == "Clouds" && time < 19 {
             return "Calm and Mellow Chill"
-        } else if activity == "stationary" && micLevel < 0.05 && time >= 19 {
+        } else if activity == "stationary" && time >= 19 {
             return "Sleep mode"
         } else {
             return "Calm and Mellow Chill"
