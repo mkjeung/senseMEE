@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var spotifyManager = SpotifyManager()
-    @ObservedObject var sensorDataManager = SensorDataManager()
+    @EnvironmentObject var spotifyManager: SpotifyManager
+    @EnvironmentObject var sensorDataManager: SensorDataManager
 
     var body: some View {
         VStack {
@@ -38,6 +38,8 @@ struct ContentView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
+            .environmentObject(SpotifyManager())
+            .environmentObject(SensorDataManager(spotifyManager: SpotifyManager()))
     }
 }
 

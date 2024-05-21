@@ -8,7 +8,8 @@ struct YourApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(appDelegate.spotifyManager)
+                .environmentObject(appDelegate.sensorDataManager!)
         }
     }
 }
-

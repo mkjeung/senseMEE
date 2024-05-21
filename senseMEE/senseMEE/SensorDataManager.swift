@@ -15,6 +15,8 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var sensorData: [String] = []
     @Published var isCollectingData = false
     @Published var predictedActivity: String = "Unknown"
+    @Published var availableDevices: [SpotifyDevice] = []
+    
     private var startTime: Date?
     private var weatherDescription: String = "Unknown"
     private let locationManager = CLLocationManager()
@@ -24,7 +26,6 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private var accessToken: String? {
         return UserDefaults.standard.string(forKey: "SpotifyAccessToken")
     }
-    
     // Properties for sliding window data
     private var accelData: [(x: Double, y: Double, z: Double, timestamp: Date)] = []
     private var gyroData: [(x: Double, y: Double, z: Double, timestamp: Date)] = []
@@ -32,8 +33,12 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let windowSize: TimeInterval = 5.0
     private var coreMLModel: playlists!
     
-    override init() {
-        motionManager = CMMotionManager()
+    private var spotifyManager: SpotifyManager
+    private var cancellables: Set<AnyCancellable> = []
+    
+    init(spotifyManager: SpotifyManager) {
+        self.spotifyManager = spotifyManager
+        self.motionManager = CMMotionManager()
         motionManager.deviceMotionUpdateInterval = 1.0 / 60.0
         super.init()
         setupAudioRecorder()
@@ -41,6 +46,7 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         startWeatherTimer()
         startDataCollectionLoop()
         loadCoreMLModel()
+        observeSpotifyDevices()
     }
     
     private func setupAudioRecorder() {
@@ -89,13 +95,13 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             self?.collectData()
         }
         
-//        spotifyTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
-//            if let playlistId = self?.curPlaylistId {
-//                if let tok = self?.accessToken {
-//                    self?.handleSpotify(accessToken: tok, playlistId: playlistId)
-//                }
-//            }
-//        }
+        spotifyTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
+            if let playlistId = self?.curPlaylistId {
+                if let tok = self?.accessToken {
+                    self?.handleSpotify(accessToken: tok, playlistId: playlistId)
+                }
+            }
+        }
     }
     
     private func fetchWeatherData() {
@@ -185,6 +191,39 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
     
     // Spotify
+    
+    func getActiveDevice(accessToken: String, completion: @escaping (String?) -> Void) {
+        let url = URL(string: "https://api.spotify.com/v1/me/player")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("Error getting active device: \(error.localizedDescription)")
+                completion(nil)
+                return
+            }
+
+            if let data = data {
+                do {
+                    if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+                       let device = json["device"] as? [String: Any],
+                       let deviceId = device["id"] as? String {
+                        completion(deviceId)
+                    } else {
+                        completion(nil)
+                    }
+                } catch {
+                    print("Error parsing JSON: \(error.localizedDescription)")
+                    completion(nil)
+                }
+            }
+        }
+
+        task.resume()
+    }
+    
     func fetchPlaylistTracks(accessToken: String, playlistId: String, completion: @escaping ([String]?) -> Void) {
         var allTrackIds: [String] = []
         var urlString: String = "https://api.spotify.com/v1/playlists/\(playlistId)/tracks"
@@ -240,35 +279,71 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                     completion(nil)
                     return
                 }
-                
-                let randomTrackId = self.chooseRandomTrack(from: trackIds)
+                print("\(trackIds)")
+
+                guard let randomTrackId = self.chooseRandomTrack(from: trackIds) else {
+                    print("couldn't get random track")
+                    completion(nil)
+                    return
+                }
+                print("\(randomTrackId)")
                 completion(randomTrackId)
             }
     }
     
     func addTrackToPlaybackQueue(accessToken: String, trackId: String, completion: @escaping (Bool) -> Void) {
-        let queueUrl = "https://api.spotify.com/v1/me/player/queue?uri=spotify:track:\(trackId)"
+        let queueUrl = "https://api.spotify.com/v1/me/player/queue?uri=spotify%3Atrack%3A\(trackId)"
+//        let queueUrl = "https://api.spotify.com/v1/me/player/queue?uri=\(trackId)"
+        print(queueUrl)
         
+//        guard let url = URL(string: queueUrl) else {
+//            completion(false)
+//            return
+//        }
+//
+//        var request = URLRequest(url: url)
+//        request.httpMethod = "POST"
+//        request.addValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+//
+//        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+//            guard error == nil, let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 204 else {
+//                print("Error adding track to playback queue: \(String(describing: error))")
+//                completion(false)
+//                return
+//            }
+//
+//            completion(true)
+//        }
+//
+//        task.resume()
         guard let url = URL(string: queueUrl) else {
-            completion(false)
-            return
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.addValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-        
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            guard error == nil, let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 204 else {
-                print("Error adding track to playback queue: \(String(describing: error))")
-                completion(false)
+                print("Invalid URL")
                 return
             }
-            
-            completion(true)
-        }
-        
-        task.resume()
+
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+
+            let task = URLSession.shared.dataTask(with: request) { data, response, error in
+                if let error = error {
+                    print("Error adding track to playback queue: \(error.localizedDescription)")
+                    return
+                }
+                
+                if let httpResponse = response as? HTTPURLResponse {
+                    if httpResponse.statusCode == 204 {
+                        print("Track added to playback queue successfully.")
+                    } else {
+                        print("Failed to add track to playback queue. Status code: \(httpResponse.statusCode)")
+                        if let data = data, let errorResponse = String(data: data, encoding: .utf8) {
+                            print("Error response: \(errorResponse)")
+                        }
+                    }
+                }
+            }
+
+            task.resume()
     }
     
     func skipToNext(accessToken: String, completion: @escaping (Bool) -> Void) {
@@ -369,8 +444,25 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                 
                 DispatchQueue.main.async { // Ensure UI updates are on the main thread
                     self.predictedActivity = mode
-                    self.nextPlaylistId = mode
-                    print("Predicted activity: \(self.predictedActivity)")
+                    var pid: String
+
+                    switch mode {
+                    case "Hype & Energizing":
+                        pid = "6CKEggKfRsvHzxnvrAjRDg"
+                    case "Emo Rock Music":
+                        pid = "7wg3juMUK73gUJEEqqWc9Z"
+                    case "Bright Happy Chill":
+                        pid = "1xII5ZLXOb6Sys0kSWgB7R"
+                    case "Calm and Mellow Chill":
+                        pid = "1hNnTVPxdcjwb86RIiihnk"
+                    case "Sleep mode":
+                        pid = "4UpGbmuWWzD8KQZ8RlHUs7"
+                    default:
+                        pid = "7wg3juMUK73gUJEEqqWc9Z"
+                    }
+
+                    self.nextPlaylistId = pid
+                    //print("Predicted activity: \(self.predictedActivity)")
                 }
                 //print("Predicted activity: \(self.predictedActivity)")
             } catch {
@@ -382,35 +474,35 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
     
     func determineMode(weather: String, time: Int, activity: String, micLevel: Double) -> String {
-        print("Determining mode with weather: \(weather), time: \(time), activity: \(activity), micLevel: \(micLevel)")
+        //print("Determining mode with weather: \(weather), time: \(time), activity: \(activity), micLevel: \(micLevel)")
         
         if activity == "running" {
             return "Hype & Energizing"
-        
-        } else if weather == "Rain" {
+        } else if weather == "Rain" || weather == "Drizzle" || weather == "Thunderstorm"{
             return "Emo Rock Music"
-            //7wg3juMUK73gUJEEqqWc9Z
-        } else if activity == "walking" && micLevel > 0.3 {
+        } else if micLevel > 0.3 {
             return "Hype & Energizing"
-            //6CKEggKfRsvHzxnvrAjRDg
         } else if activity == "walking" && time >= 19 {
             return "Emo Rock Music"
         } else if activity == "walking" && weather == "Clear" && time < 19 {
             return "Bright Happy Chill"
-            //1xII5ZLXOb6Sys0kSWgB7R
-        } else if activity == "stationary" && micLevel < 0.05 && time < 19 {
+        } else if activity == "stationary" && micLevel < 0.15 && time < 19 {
             return "Calm and Mellow Chill"
-            //1hNnTVPxdcjwb86RIiihnk
         } else if activity == "walking" && weather == "Clouds" && time < 19 {
             return "Calm and Mellow Chill"
         } else if activity == "stationary" && micLevel < 0.05 && time >= 19 {
-            //4UpGbmuWWzD8KQZ8RlHUs7
             return "Sleep mode"
         } else {
-            return "Default: Emo Rock Music"
-            
+            return "Calm and Mellow Chill"
         }
-        
+    }
+    private func observeSpotifyDevices() {
+        spotifyManager.$availableDevices
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] devices in
+                self?.availableDevices = devices
+            }
+            .store(in: &cancellables)
     }
 }
 
@@ -425,4 +517,3 @@ extension Array where Element == Double {
         return isEmpty ? 0.0 : reduce(0.0) { $0 + ($1 - meanValue) * ($1 - meanValue) } / Double(count)
     }
 }
-
