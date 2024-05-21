@@ -10,6 +10,7 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private var motionManager: CMMotionManager
     private var audioRecorder: AVAudioRecorder?
     private var collectionTimer: Timer?
+    private var spotifyTimer: Timer?
     private var weatherTimer: Timer?
     @Published var sensorData: [String] = []
     @Published var isCollectingData = false
@@ -18,6 +19,9 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private var weatherDescription: String = "Unknown"
     private let locationManager = CLLocationManager()
     private let weatherAPIKey = "f1a1cc54b829d4c066beafe570a227c2"
+    private var curPlaylistId = "fill in"
+    private var nextPlaylistId = "change"
+    private var accessToken = "token"
     
     // Properties for sliding window data
     private var accelData: [(x: Double, y: Double, z: Double, timestamp: Date)] = []
@@ -81,6 +85,14 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
 
         collectionTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in
             self?.collectData()
+        }
+        
+        spotifyTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
+            if let playlistId = self?.curPlaylistId {
+                if let tok = self?.accessToken {
+                    self?.handleSpotify(accessToken: tok, playlistId: playlistId)
+                }
+            }
         }
     }
     
@@ -255,6 +267,57 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         
         task.resume()
     }
+    
+    func skipToNext(accessToken: String, completion: @escaping (Bool) -> Void) {
+        let nextUrl = "https://api.spotify.com/v1/me/player/next"
+        guard let url = URL(string: nextUrl) else {
+            completion(false)
+            return
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            guard error == nil, let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 204 else {
+                print("Error adding track to playback queue: \(String(describing: error))")
+                completion(false)
+                return
+            }
+            
+            completion(true)
+        }
+        
+        task.resume()
+        
+    }
+    
+    func handleSpotify(accessToken: String, playlistId: String) {
+        if self.nextPlaylistId != self.curPlaylistId {
+            self.getRandomTrackFromPlaylist(accessToken: accessToken, playlistId: playlistId) { randomTrackId in
+                if let randomTrackId = randomTrackId {
+                    self.addTrackToPlaybackQueue(accessToken: accessToken, trackId: randomTrackId) { success in
+                        if success {
+                            print("Successfully added track to playback queue")
+                        } else {
+                            print("Failed to add track to playback queue")
+                        }
+                    }
+                    self.skipToNext(accessToken: accessToken) { success in
+                        if success {
+                            print("Successfully skipped to next song")
+                        } else {
+                            print("Failed to skip to next song")
+                        }
+                    }
+                    
+                } else {
+                    print("No tracks found in the playlist or an error occurred")
+                }
+            }
+            self.curPlaylistId = self.nextPlaylistId
+        }
+    }
 
     
 
@@ -302,8 +365,10 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             DispatchQueue.main.async { // Ensure UI updates are on the main thread
                 if prediction.classLabel == "stationary" && micMean < 0.05 && self.weatherDescription == "Clouds" && hour < 20 {
                     self.predictedActivity = "Sleep"
+                    self.nextPlaylistId = "Change"
                 } else {
                     self.predictedActivity = "Awake"
+                    self.nextPlaylistId = "Change"
                 }
                 print("Predicted activity: \(self.predictedActivity)")
             }
