@@ -21,7 +21,7 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let locationManager = CLLocationManager()
     private let weatherAPIKey = "f1a1cc54b829d4c066beafe570a227c2"
     private var curPlaylistId = "fill in"
-    private var nextPlaylistId = "change"
+    private var nextPlaylistId = "Emo Rock"
     private var accessToken: String? {
         return UserDefaults.standard.string(forKey: "SpotifyAccessToken")
     }
@@ -449,11 +449,9 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             return "Emo Rock Music"
         } else if activity == "walking" && time >= 19 {
             return "Emo Rock Music"
-        } else if activity == "walking" && weather == "Clear" && time < 19 {
+        } else if activity == "walking" && time < 19 {
             return "Bright Happy Chill"
         } else if activity == "stationary" && time < 19 {
-            return "Calm and Mellow Chill"
-        } else if activity == "walking" && weather == "Clouds" && time < 19 {
             return "Calm and Mellow Chill"
         } else if activity == "stationary" && time >= 19 {
             return "Sleep mode"
