@@ -5,6 +5,7 @@ import UIKit
 import CoreLocation
 import CoreML
 import Combine
+import Darwin
 
 class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private var motionManager: CMMotionManager
@@ -71,7 +72,8 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             self?.collectData()
         }
         
-        spotifyTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
+        spotifyTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            self?.classifyData()
             if let playlistId = self?.curPlaylistId {
                 if let tok = self?.accessToken {
                     self?.handleSpotify(accessToken: tok, playlistId: playlistId)
@@ -152,7 +154,7 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         // Check if we have enough data to classify
         if let start = accelData.first?.timestamp, Date().timeIntervalSince(start) >= windowSize {
             //print("Enough data collected, attempting to classify...")
-            classifyData()
+            //classifyData()
         } else {
             //print("Not enough data collected yet")
         }
@@ -356,7 +358,6 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                             print("Failed to skip to next song")
                         }
                     }
-                    
                 } else {
                     print("No tracks found in the playlist or an error occurred")
                 }
