@@ -8,6 +8,7 @@ import Combine
 import Darwin
 
 class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
+    // Variables for IMU and ambient sensing
     private var motionManager: CMMotionManager
     private var collectionTimer: Timer?
     private var spotifyTimer: Timer?
@@ -21,6 +22,8 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private var weatherDescription: String = "Unknown"
     private let locationManager = CLLocationManager()
     private let weatherAPIKey = "f1a1cc54b829d4c066beafe570a227c2"
+
+    // Variables for Spotify
     private var curPlaylistId = "fill in"
     private var nextPlaylistId = "Emo Rock"
     private var accessToken: String? {
@@ -60,6 +63,7 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
     }
     
+    // Data collection loop incorporates collect and classifying data
     func startDataCollectionLoop() {
         guard motionManager.isDeviceMotionAvailable else {
             print("Device motion is not available")
@@ -68,10 +72,12 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
 
         motionManager.startDeviceMotionUpdates()
 
+        // Collects data from the past 5 seconds
         collectionTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in
             self?.collectData()
         }
         
+        // Classifies data and switches Spotify playlist if vibe changes
         spotifyTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             self?.classifyData()
             if let playlistId = self?.curPlaylistId {
@@ -86,6 +92,7 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         locationManager.startUpdatingLocation()
     }
     
+    // Ambient sensing of current weather
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.first else { return }
         print("Location updated: \(location)")
@@ -127,6 +134,7 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         task.resume()
     }
     
+    // Load pretrained Random Forest model
     private func loadCoreMLModel() {
         do {
             coreMLModel = try playlists(configuration: MLModelConfiguration())
@@ -141,6 +149,7 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             return
         }
 
+        // IMU data
         let accel = motion.userAcceleration
         let gyro = motion.rotationRate
         let timestamp = Date()
@@ -148,20 +157,13 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         accelData.append((x: accel.x, y: accel.y, z: accel.z, timestamp: timestamp))
         gyroData.append((x: gyro.x, y: gyro.y, z: gyro.z, timestamp: timestamp))
 
+        // Collecting data on a 5 second timestamp
         accelData = accelData.filter { $0.timestamp > Date().addingTimeInterval(-windowSize) }
         gyroData = gyroData.filter { $0.timestamp > Date().addingTimeInterval(-windowSize) }
-
-        // Check if we have enough data to classify
-        if let start = accelData.first?.timestamp, Date().timeIntervalSince(start) >= windowSize {
-            //print("Enough data collected, attempting to classify...")
-            //classifyData()
-        } else {
-            //print("Not enough data collected yet")
-        }
     }
     
     // Spotify
-    
+    // Finding accurent active device (make static var)
     func getActiveDevice(accessToken: String, completion: @escaping (String?) -> Void) {
         let url = URL(string: "https://api.spotify.com/v1/me/player")!
         var request = URLRequest(url: url)
@@ -194,10 +196,10 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         task.resume()
     }
     
+    // Get all tracks from a playlist by ID
     func fetchPlaylistTracks(accessToken: String, playlistId: String, completion: @escaping ([String]?) -> Void) {
         var allTrackIds: [String] = []
         var urlString: String = "https://api.spotify.com/v1/playlists/\(playlistId)/tracks"
-//        var nextURL: String? = "https://api.spotify.com/v1/playlists/\(playlistId)/tracks"
         guard let url = URL(string: urlString) else {
             print("Invalid URL")
             completion(nil)
@@ -235,12 +237,14 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         task.resume()
     }
 
+    // Index on playlist and choose one song
     func chooseRandomTrack(from tracks: [String]) -> String? {
         guard !tracks.isEmpty else { return nil }
         let randomIndex = Int.random(in: 0..<tracks.count)
         return tracks[randomIndex]
     }
 
+    // Given a playlist ID, choose a random song from it
     func getRandomTrackFromPlaylist(accessToken: String, playlistId: String, completion: @escaping (String?) -> Void) {
         
             fetchPlaylistTracks(accessToken: accessToken, playlistId: playlistId) { trackIds in
@@ -249,43 +253,20 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                     completion(nil)
                     return
                 }
-                print("\(trackIds)")
 
                 guard let randomTrackId = self.chooseRandomTrack(from: trackIds) else {
                     print("couldn't get random track")
                     completion(nil)
                     return
                 }
-                print("\(randomTrackId)")
                 completion(randomTrackId)
             }
     }
     
+    // Given song, add it to the end of queue
     func addTrackToPlaybackQueue(accessToken: String, trackId: String, completion: @escaping (Bool) -> Void) {
         let queueUrl = "https://api.spotify.com/v1/me/player/queue?uri=spotify%3Atrack%3A\(trackId)"
-//        let queueUrl = "https://api.spotify.com/v1/me/player/queue?uri=\(trackId)"
-        print(queueUrl)
-        
-//        guard let url = URL(string: queueUrl) else {
-//            completion(false)
-//            return
-//        }
-//
-//        var request = URLRequest(url: url)
-//        request.httpMethod = "POST"
-//        request.addValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-//
-//        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-//            guard error == nil, let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 204 else {
-//                print("Error adding track to playback queue: \(String(describing: error))")
-//                completion(false)
-//                return
-//            }
-//
-//            completion(true)
-//        }
-//
-//        task.resume()
+
         guard let url = URL(string: queueUrl) else {
                 print("Invalid URL")
                 return
@@ -316,6 +297,7 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             task.resume()
     }
     
+    // Simple API call to skip to the next song
     func skipToNext(accessToken: String, completion: @escaping (Bool) -> Void) {
         let nextUrl = "https://api.spotify.com/v1/me/player/next"
         guard let url = URL(string: nextUrl) else {
@@ -340,7 +322,13 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         
     }
     
+    // Handles all Spotify interactions
     func handleSpotify(accessToken: String, playlistId: String) {
+        // If the classified vibe is different, we need to switch the playlist
+        // Steps:
+        // - get a random track off the new playlist
+        // - add it to the queue
+        // - skip to the next song
         if self.nextPlaylistId != self.curPlaylistId {
             self.getRandomTrackFromPlaylist(accessToken: accessToken, playlistId: playlistId) { randomTrackId in
                 if let randomTrackId = randomTrackId {
@@ -362,13 +350,14 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                     print("No tracks found in the playlist or an error occurred")
                 }
             }
+            // Set new playlist as the current one
             self.curPlaylistId = self.nextPlaylistId
         }
     }
 
-    
-
+    // Classification using IMU and ambient sensing
     private func classifyData() {
+        // Part #1: IMU data (set in collectData())
         let accelMeanX = accelData.map { $0.x }.mean
         let accelMeanY = accelData.map { $0.y }.mean
         let accelMeanZ = accelData.map { $0.z }.mean
@@ -388,8 +377,8 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         dateFormatter.dateFormat = "HH"
         let hourString = dateFormatter.string(from: Date())
 
+        // Take attributes and get features (mean and var)
         if let hour = Int(hourString) {
-            //print(hour) // This will print the hour as an integer
 
             let modelInput = playlistsInput(
                 mean_AccelX: accelMeanX,
@@ -408,6 +397,7 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             do {
                 let prediction = try coreMLModel.prediction(input: modelInput)
                 
+                // Get classified playlist
                 let mode = determineMode(weather: weatherDescription, time: hour, activity: prediction.classLabel)
                 
                 DispatchQueue.main.async { // Ensure UI updates are on the main thread
@@ -430,9 +420,7 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                     }
 
                     self.nextPlaylistId = pid
-                    //print("Predicted activity: \(self.predictedActivity)")
                 }
-                //print("Predicted activity: \(self.predictedActivity)")
             } catch {
                 print("Failed to make a prediction: \(error)")
             }
@@ -441,8 +429,9 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
     }
     
+    // Part #2: Combines IMU activity classification with ambient sensing
+    // to output activity
     func determineMode(weather: String, time: Int, activity: String) -> String {
-        //print("Determining mode with weather: \(weather), time: \(time), activity: \(activity), micLevel: \(micLevel)")
         
         if activity == "running" {
             return "Hype & Energizing"
@@ -470,7 +459,7 @@ class SensorDataManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
 }
 
-// Extensions should be placed outside the class definition
+// Mean and variance
 extension Array where Element == Double {
     var mean: Double {
         return isEmpty ? 0.0 : reduce(0.0, +) / Double(count)
