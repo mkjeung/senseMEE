@@ -1,7 +1,8 @@
 import SwiftUI
 
 struct ContentView: View {
-    @ObservedObject var sensorDataManager = SensorDataManager()
+    @EnvironmentObject var spotifyManager: SpotifyManager
+    @EnvironmentObject var sensorDataManager: SensorDataManager
 
     var body: some View {
         VStack {
@@ -15,59 +16,30 @@ struct ContentView: View {
                 .foregroundColor(.blue)
             
             Spacer()
+            
+            if spotifyManager.accessToken != nil {
+                Text("Authenticated")
+            } else {
+                Button("Authenticate with Spotify") {
+                    spotifyManager.authenticate()
+                }
+            }
         }
         .onAppear {
-            sensorDataManager.startDataCollectionLoop() 
+            sensorDataManager.startDataCollectionLoop()
         }
+        .onOpenURL { url in
+            spotifyManager.handleURL(url)
+        }
+        .padding()
     }
 }
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
+            .environmentObject(SpotifyManager())
+            .environmentObject(SensorDataManager(spotifyManager: SpotifyManager()))
     }
 }
-
-
-
-
-//import SwiftUI
-//
-//struct ContentView: View {
-//    @StateObject private var sensorDataManager = SensorDataManager()
-//
-//    var body: some View {
-//        VStack {
-//            Text("Time remaining: \(sensorDataManager.remainingTime) seconds")
-//                .font(.title)
-//                .padding()
-//
-//            Button(action: {
-//                sensorDataManager.startCollectingData()
-//            }) {
-//                Text("Start Collecting Data")
-//                    .padding()
-//                    .background(Color.blue)
-//                    .foregroundColor(.white)
-//                    .cornerRadius(10)
-//            }
-//            .padding()
-//            
-//            if sensorDataManager.isCollectingData {
-//                Text("Collecting data...")
-//                    .foregroundColor(.red)
-//            } else {
-//                Text("Data collection stopped")
-//                    .foregroundColor(.green)
-//            }
-//        }
-//        .padding()
-//    }
-//}
-//
-//struct ContentView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        ContentView()
-//    }
-//}
 

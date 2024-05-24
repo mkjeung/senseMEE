@@ -1,17 +1,15 @@
-//
-//  senseMEE.swift
-//  senseMEE
-//
-//  Created by Matthew Jeung on 5/12/24.
-//
-
 import SwiftUI
 
 @main
-struct senseMEE: App {
+struct YourApp: App {
+    // Register AppDelegate
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(appDelegate.spotifyManager)
+                .environmentObject(appDelegate.sensorDataManager!)
         }
     }
 }

@@ -8,14 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		140C712A2BFC41A9000C993D /* playlists.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 140C71292BFC41A9000C993D /* playlists.mlmodel */; };
+		EB8984B92BFC591800B6705C /* SpotifyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB8984B82BFC591800B6705C /* SpotifyManager.swift */; };
+		EB8984BF2BFC5B2000B6705C /* SpotifyiOS.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB8984BE2BFC5B2000B6705C /* SpotifyiOS.xcframework */; };
+		EB8984C02BFC5B2000B6705C /* SpotifyiOS.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = EB8984BE2BFC5B2000B6705C /* SpotifyiOS.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		EB8984C32BFC65B200B6705C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB8984C22BFC65B200B6705C /* AppDelegate.swift */; };
+		EB8984C52BFC66FF00B6705C /* senseMEE.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB8984C42BFC66FF00B6705C /* senseMEE.swift */; };
 		EBAB3EEE2BDC4C1900C3EA57 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBAB3EED2BDC4C1900C3EA57 /* ContentView.swift */; };
 		EBAB3EF02BDC4C1A00C3EA57 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EBAB3EEF2BDC4C1A00C3EA57 /* Assets.xcassets */; };
-		EBAB3EF32BDC4C1A00C3EA57 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EBAB3EF22BDC4C1A00C3EA57 /* Preview Assets.xcassets */; };
-		EBAB3EFD2BDC4C1A00C3EA57 /* senseMEETests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBAB3EFC2BDC4C1A00C3EA57 /* senseMEETests.swift */; };
-		EBAB3F072BDC4C1A00C3EA57 /* senseMEEUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBAB3F062BDC4C1A00C3EA57 /* senseMEEUITests.swift */; };
-		EBAB3F092BDC4C1A00C3EA57 /* senseMEEUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBAB3F082BDC4C1A00C3EA57 /* senseMEEUITestsLaunchTests.swift */; };
 		EBD78C252BEC1735004618DF /* SensorDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBD78C242BEC1735004618DF /* SensorDataManager.swift */; };
-		EBD78C2B2BF19697004618DF /* senseMEE.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBD78C2A2BF19697004618DF /* senseMEE.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -35,19 +35,34 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		EB8984BC2BFC5A4D00B6705C /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				EB8984C02BFC5B2000B6705C /* SpotifyiOS.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		140C71292BFC41A9000C993D /* playlists.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = playlists.mlmodel; sourceTree = "<group>"; };
+		EB8984B52BFC585D00B6705C /* senseMEE-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "senseMEE-Bridging-Header.h"; sourceTree = "<group>"; };
+		EB8984B82BFC591800B6705C /* SpotifyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyManager.swift; sourceTree = "<group>"; };
+		EB8984BE2BFC5B2000B6705C /* SpotifyiOS.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = SpotifyiOS.xcframework; path = "../../Downloads/ios-sdk-2.0.1 4/SpotifyiOS.xcframework"; sourceTree = "<group>"; };
+		EB8984C12BFC5B3000B6705C /* SpotifyiOS.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = SpotifyiOS.xcframework; sourceTree = "<group>"; };
+		EB8984C22BFC65B200B6705C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		EB8984C42BFC66FF00B6705C /* senseMEE.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = senseMEE.swift; sourceTree = "<group>"; };
 		EBAB3EE82BDC4C1900C3EA57 /* senseMEE.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = senseMEE.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EBAB3EED2BDC4C1900C3EA57 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		EBAB3EEF2BDC4C1A00C3EA57 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		EBAB3EF22BDC4C1A00C3EA57 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		EBAB3EF82BDC4C1A00C3EA57 /* senseMEETests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = senseMEETests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		EBAB3EFC2BDC4C1A00C3EA57 /* senseMEETests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = senseMEETests.swift; sourceTree = "<group>"; };
 		EBAB3F022BDC4C1A00C3EA57 /* senseMEEUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = senseMEEUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		EBAB3F062BDC4C1A00C3EA57 /* senseMEEUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = senseMEEUITests.swift; sourceTree = "<group>"; };
-		EBAB3F082BDC4C1A00C3EA57 /* senseMEEUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = senseMEEUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		EBD78C242BEC1735004618DF /* SensorDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorDataManager.swift; sourceTree = "<group>"; };
-		EBD78C2A2BF19697004618DF /* senseMEE.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = senseMEE.swift; sourceTree = "<group>"; };
 		EBD78C642BF1A859004618DF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -56,6 +71,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EB8984BF2BFC5B2000B6705C /* SpotifyiOS.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -76,13 +92,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		EB8984BD2BFC5B2000B6705C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				EB8984BE2BFC5B2000B6705C /* SpotifyiOS.xcframework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		EBAB3EDF2BDC4C1900C3EA57 = {
 			isa = PBXGroup;
 			children = (
 				EBAB3EEA2BDC4C1900C3EA57 /* senseMEE */,
-				EBAB3EFB2BDC4C1A00C3EA57 /* senseMEETests */,
-				EBAB3F052BDC4C1A00C3EA57 /* senseMEEUITests */,
 				EBAB3EE92BDC4C1900C3EA57 /* Products */,
+				EB8984BD2BFC5B2000B6705C /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -99,40 +122,18 @@
 		EBAB3EEA2BDC4C1900C3EA57 /* senseMEE */ = {
 			isa = PBXGroup;
 			children = (
+				EB8984C12BFC5B3000B6705C /* SpotifyiOS.xcframework */,
 				EBD78C642BF1A859004618DF /* Info.plist */,
 				140C71292BFC41A9000C993D /* playlists.mlmodel */,
-				EBD78C2A2BF19697004618DF /* senseMEE.swift */,
+				EB8984C42BFC66FF00B6705C /* senseMEE.swift */,
 				EBD78C242BEC1735004618DF /* SensorDataManager.swift */,
 				EBAB3EED2BDC4C1900C3EA57 /* ContentView.swift */,
 				EBAB3EEF2BDC4C1A00C3EA57 /* Assets.xcassets */,
-				EBAB3EF12BDC4C1A00C3EA57 /* Preview Content */,
+				EB8984B52BFC585D00B6705C /* senseMEE-Bridging-Header.h */,
+				EB8984B82BFC591800B6705C /* SpotifyManager.swift */,
+				EB8984C22BFC65B200B6705C /* AppDelegate.swift */,
 			);
 			path = senseMEE;
-			sourceTree = "<group>";
-		};
-		EBAB3EF12BDC4C1A00C3EA57 /* Preview Content */ = {
-			isa = PBXGroup;
-			children = (
-				EBAB3EF22BDC4C1A00C3EA57 /* Preview Assets.xcassets */,
-			);
-			path = "Preview Content";
-			sourceTree = "<group>";
-		};
-		EBAB3EFB2BDC4C1A00C3EA57 /* senseMEETests */ = {
-			isa = PBXGroup;
-			children = (
-				EBAB3EFC2BDC4C1A00C3EA57 /* senseMEETests.swift */,
-			);
-			path = senseMEETests;
-			sourceTree = "<group>";
-		};
-		EBAB3F052BDC4C1A00C3EA57 /* senseMEEUITests */ = {
-			isa = PBXGroup;
-			children = (
-				EBAB3F062BDC4C1A00C3EA57 /* senseMEEUITests.swift */,
-				EBAB3F082BDC4C1A00C3EA57 /* senseMEEUITestsLaunchTests.swift */,
-			);
-			path = senseMEEUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -145,6 +146,7 @@
 				EBAB3EE42BDC4C1900C3EA57 /* Sources */,
 				EBAB3EE52BDC4C1900C3EA57 /* Frameworks */,
 				EBAB3EE62BDC4C1900C3EA57 /* Resources */,
+				EB8984BC2BFC5A4D00B6705C /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -203,6 +205,7 @@
 				TargetAttributes = {
 					EBAB3EE72BDC4C1900C3EA57 = {
 						CreatedOnToolsVersion = 15.3;
+						LastSwiftMigration = 1530;
 					};
 					EBAB3EF72BDC4C1A00C3EA57 = {
 						CreatedOnToolsVersion = 15.3;
@@ -239,7 +242,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EBAB3EF32BDC4C1A00C3EA57 /* Preview Assets.xcassets in Resources */,
 				EBAB3EF02BDC4C1A00C3EA57 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -265,8 +267,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EBD78C2B2BF19697004618DF /* senseMEE.swift in Sources */,
+				EB8984C52BFC66FF00B6705C /* senseMEE.swift in Sources */,
+				EB8984C32BFC65B200B6705C /* AppDelegate.swift in Sources */,
 				EBAB3EEE2BDC4C1900C3EA57 /* ContentView.swift in Sources */,
+				EB8984B92BFC591800B6705C /* SpotifyManager.swift in Sources */,
 				140C712A2BFC41A9000C993D /* playlists.mlmodel in Sources */,
 				EBD78C252BEC1735004618DF /* SensorDataManager.swift in Sources */,
 			);
@@ -276,7 +280,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EBAB3EFD2BDC4C1A00C3EA57 /* senseMEETests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -284,8 +287,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EBAB3F092BDC4C1A00C3EA57 /* senseMEEUITestsLaunchTests.swift in Sources */,
-				EBAB3F072BDC4C1A00C3EA57 /* senseMEEUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -429,11 +430,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"senseMEE/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = Z9F55LHFZM;
 				ENABLE_PREVIEWS = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					SpotifyiOS.framework,
+					"$(PROJECT_DIR)/senseMEE",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = senseMEE/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "To get ambient light data";
@@ -449,9 +455,12 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = uchicago.senseMEE;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_BUNDLE_IDENTIFIER = lebron;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "senseMEE/senseMEE-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -462,11 +471,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"senseMEE/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = Z9F55LHFZM;
 				ENABLE_PREVIEWS = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					SpotifyiOS.framework,
+					"$(PROJECT_DIR)/senseMEE",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = senseMEE/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "To get ambient light data";
@@ -482,9 +496,11 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = uchicago.senseMEE;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_BUNDLE_IDENTIFIER = lebron;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "senseMEE/senseMEE-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
