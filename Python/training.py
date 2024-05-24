@@ -2,6 +2,10 @@ import coremltools
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 import os
+import numpy as np
+from sklearn.metrics import confusion_matrix, precision_score
+import time
+
 
 def summarize_sensor_trace(csv_file: str):
     data = pd.read_csv(csv_file, index_col=False)
@@ -46,6 +50,31 @@ def make_model():
     train_y = train[:,1]
     model = RandomForestClassifier()
     model.fit(train_x, train_y)
+
+    ### Testing
+    # indices = np.random.permutation(train.shape[0])
+    # training_idx, val_idx = indices[:48], indices[48:]
+    # training, val = train[training_idx,:], train[val_idx,:]
+    # train_x = training[:,2:14]
+    # train_y = training[:,1]
+
+    # val_x = val[:,2:14]
+    # val_y = val[:,1]
+
+    # model = RandomForestClassifier()
+    # model.fit(train_x, train_y)
+
+    # start_ts = time.time()
+    # yval_preds = model.predict(val_x)
+    # end_ts = time.time()
+
+    # cm = confusion_matrix(val_y, yval_preds)
+    # precision = precision_score(val_y, yval_preds, average=None)
+    # print("Confusion matrix: ")
+    # print(cm)
+    # print("Precision Score: ", precision)
+    # print(f"Prediction Time [s]: {((end_ts-start_ts)/len(val_x)):.6f}")
+
 
     coreml_model = coremltools.converters.sklearn.convert(model, input_features=attributes)
     coreml_model.save('Python/playlists.mlmodel')
